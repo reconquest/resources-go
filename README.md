@@ -1,5 +1,7 @@
 # resources-go
 
+[![](https://godoc.org/github.com/reconquest/resources-go?status.svg)](http://godoc.org/github.com/reconquest/resources-go)
+
 This library helps to build cache-like storage that always has a value. The
 basic problem of existing cache packages is that cache doesn't exist until some
 code calls getter, but it's not suitable approach if human will need to wait
