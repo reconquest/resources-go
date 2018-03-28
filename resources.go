@@ -10,10 +10,17 @@ type loaderResult struct {
 	err    error
 }
 
+// ErrorHandler is a function that handles error that happened while updating
+// a resource. error can't be nil.
 type ErrorHandler func(error)
 
+// Loader is a function that loads/updates resource, result and error returning
+// values will be stored as the cache. If error is returned by loader, it will
+// be also returned as error of Get() call.
 type Loader func() (interface{}, error)
 
+// Resources is a common structure that incapsulates work with cache and
+// provides useful methods for synchronizing resources.
 type Resources struct {
 	loaders      *sync.Map
 	items        *sync.Map
@@ -21,6 +28,7 @@ type Resources struct {
 	errorHandler ErrorHandler
 }
 
+// NewResources creates a new instance for working with cachable resources.
 func NewResources(interval time.Duration) *Resources {
 	return &Resources{
 		items:    &sync.Map{},
@@ -29,14 +37,24 @@ func NewResources(interval time.Duration) *Resources {
 	}
 }
 
+// SetLoader sets given Loader function for given key. By given key user will
+// be able retrieve cache value.
 func (resources *Resources) SetLoader(key string, loader Loader) {
 	resources.loaders.Store(key, loader)
 }
 
+// SetErrorHandler is optional method, passed function will be called and error
+// will be passed to it if some error happened while updating refresh caches.
+// This function is not called if you specified waitOnce=true in Sync() method.
 func (resources *Resources) SetErrorHandler(handler ErrorHandler) {
 	resources.errorHandler = handler
 }
 
+// Sync given resources, if waitOnce is true then Sync() will block program
+// execution until all resources synchronized or an error is occurred, after
+// that goroutine with synchronization loop will be created. If waitOnce is
+// false then error will be never returned (even if any). If you use
+// waitOnce=false then you probably want to run it as goroutine.
 func (resources *Resources) Sync(waitOnce bool) error {
 	if waitOnce {
 		err := resources.sync(true)
@@ -89,6 +107,9 @@ func (resources *Resources) sync(must bool) error {
 	return syncErr
 }
 
+// Get value by given key, if a resource with specified key is not defined,
+// the function will return ErrorUndefinedResource error. The function returns
+// error that happened while loading/updating a resource.
 func (resources *Resources) Get(key string) (interface{}, error) {
 	raw, ok := resources.items.Load(key)
 	if !ok {

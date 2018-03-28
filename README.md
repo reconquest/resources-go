@@ -27,7 +27,7 @@ func main() {
     }
 }
 
-func ListKubernetesPods() ([]Pod, error) {
+func ListKubernetesPods() (interface{}, error) {
     // do something slow such as kubernetes API
     return something, nil
 }
